@@ -3,8 +3,8 @@
   "src/test"]
 
  :dependencies
- [[reagent            "1.0.0"]
-  [binaryage/devtools "1.0.2"]]
+ [[reagent            "1.10.0"]
+  [binaryage/devtools "1.0.4"]]
 
  :dev-http
  {3000 "public"}

@@ -241,10 +241,23 @@ The first time you run this, it will take a while to download all the Clojurescr
 
 And see that the app is running at `http://localhost:3000`
 You will just see `Create Reagent App` on the page as a header.
+![Initial Create Reagent App success page](images/initial-reagent-app-page.png)
 
 ## Update to support mixing webpack with shadow-cljs
 
 Based on David Vujic’s work [Agile & Coding: Hey Webpack, Hey ClojureScript](https://davidvujic.blogspot.com/2021/08/hey-webpack-hey-clojurescript.html) we’re going to add mechanisms to build the javascript code using webpack and the clojurescript code with shadow-cljs. This is necessary when using more recent versions of the AWS Amplify libraries.
+
+### Make sure Shadow-cljs dependencies are up to date
+
+In `shadow-cljs.edn` make sure that the dependencies are up to date (you can check for the latest versions at [Clojars](https://clojars.org/))
+
+```clojure
+ :dependencies
+ [[reagent            "1.10.0"]
+  [binaryage/devtools "1.0.4"]]
+```
+
+### Shadow-cljs js-options
 
 Add the following lines to shadow-cljs.edn between the `:asset-path` and `:modules` stanzas in the `:app` section
 
@@ -253,34 +266,50 @@ Add the following lines to shadow-cljs.edn between the `:asset-path` and `:modul
                 :external-index "target/index.js"}
 ```
 
-### Update `index.html` to load the libs from both shadow and webpack
+### Make a template from index.html
 
-Edit `public/index.html` to change the line
+Webpack will be used to update index.html with the proper script include that points to the webpack bundle.
 
-```html
-<script src="/js/main.js"></script>
+Move `public/index.html` to `public/index.html`
+
+```bash
+mv public/index.html public/index.html.tmpl
 ```
 
-To
+## Update the scaffold Clojurescript code to support Amplify
 
-```html
-<script defer src="/js/libs/bundle.js"></script>
-<script defer src="/js/main.js"></script>
-```
+Edit `src/main/amplifystudio_cljs_tutorial/app/core.cljs` with the following changes
 
-## Update the scaffold code to support Amplify
+### Add the dependencies for the `require`
 
-### Add the dependencies
+Add the aws amplify and ui imports to the require so it looks like:
 
-Edit `src/main/amplify_rental_reagent_app/app/core.cljs`
-Add the aws imports to the require
+Note that the `amplify pull` will populate `src/amplify/ui-components` and the `webpack` execution described further on, will set things up so the `"ui-components/CardACollection"` require can be fulfilled.
 
 ```clojure
 (ns amplifystudio-cljs-tutorial.app.core
   (:require [reagent.dom :as rdom]
             ["/aws-exports" :default ^js aws-exports]
-            ["aws-amplify" :default Amplify]))
+            ["aws-amplify" :refer [Amplify] :as amplify]
+            ["@aws-amplify/ui-react" :refer [AmplifyProvider]]
+            ["ui-components/CardACollection" :default CardACollection]))
 ```
+
+### Update the `app` method
+
+The following Clojurescript code is the equivilent of the original JS code:
+
+```jsx
+function App() {
+  return (
+    <AmplifyProvider>
+      <RentalCollection />
+    </AmplifyProvider>
+  );
+}
+```
+
+## Setup Webpack / Babel
 
 Create the file `.babelrc` in the top level of the repo with the content:
 
@@ -369,6 +398,10 @@ npm run pack
 ```
 
 ---
+
+---
+
+## **The following is from the Create Reagent App and still applies**
 
 ## General instructions from Scaffolding
 
