@@ -1,0 +1,6 @@
+{
+  "AppSyncApiName": "rentalcljs",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthModeLastUpdated": "2021-12-20T06:22:53.298Z"
+}
