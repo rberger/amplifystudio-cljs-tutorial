@@ -22,12 +22,22 @@
     "shadow-cljs-server": "shadow-cljs server"
   },
   "devDependencies": {
+    "@babel/cli": "^7.16.7",
+    "@babel/core": "^7.16.7",
+    "@babel/preset-env": "^7.16.7",
+    "@babel/preset-react": "^7.16.7",
+    "babel-loader": "^8.2.3",
+    "html-beautifier-webpack-plugin": "^1.0.6",
+    "html-webpack-plugin": "^5.5.0",
+    "process": "^0.11.10",
     "rimraf": "^3.0.2",
-    "serve": "^11.3.2",
-    "shadow-cljs": "2.11.18"
+    "serve": "^13.0.2",
+    "shadow-cljs": "2.16.10",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "react": "17.0.1",
-    "react-dom": "17.0.1"
+    "react": "17.0.2",
+    "react-dom": "17.0.2"
   }
 }
