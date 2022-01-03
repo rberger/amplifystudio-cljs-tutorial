@@ -1,7 +1,5 @@
 # Amplify Studio / Figma / Clojurescript / Reagent Tutorial
 
-_NOTE: THIS IS STILL UNDERCONSTRUCTION AND THESE INSTRUCTIONS ARE NOT UP TO DATE_ 01/01/2022
-
 Implements the AWS Tutorial [Build a Vacation Rental Site with Amplify Studio](https://welearncode.com/studio-vacation-site/) but instead of being Javascript based, uses Clojurescript for the project implementation. It does incorporate the Javascript output of Amplify Studio but all code to use it is in Clojurescript.
 
 ### Tooling Used in the project:
