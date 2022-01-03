@@ -3,7 +3,7 @@
   "src/test"]
 
  :dependencies
- [[reagent            "1.10.0"]
+ [[reagent            "1.1.0"]
   [binaryage/devtools "1.0.4"]]
 
  :dev-http
@@ -14,6 +14,8 @@
   {:target     :browser
    :output-dir "public/js"
    :asset-path "/js"
+   :js-options {:js-provider    :external
+                :external-index "target/index.js"}
    :modules    {:main
                 {:init-fn amplifystudio-cljs-tutorial.app.core/main}}}
 

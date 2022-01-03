@@ -253,7 +253,7 @@ In `shadow-cljs.edn` make sure that the dependencies are up to date (you can che
 
 ```clojure
  :dependencies
- [[reagent            "1.10.0"]
+ [[reagent            "1.1.0"]
   [binaryage/devtools "1.0.4"]]
 ```
 
@@ -270,10 +270,34 @@ Add the following lines to shadow-cljs.edn between the `:asset-path` and `:modul
 
 Webpack will be used to update index.html with the proper script include that points to the webpack bundle.
 
-Move `public/index.html` to `public/index.html`
+#### Move `public/index.html` to `public/index.html`
 
 ```bash
 mv public/index.html public/index.html.tmpl
+```
+
+#### Edit `public/index.html`
+
+- Add `defer` to the main script tag
+
+change
+
+```html
+<script src="/js/main.js"></script>
+```
+
+To:
+
+```html
+<script defer src="/js/main.js"></script>
+```
+
+#### Copy the Amplify CSS to public
+
+Note that the source is `styles.css` (plural) and the destination is `style.css` (singular)
+
+```bash
+cp node_modules/@aws-amplify/ui/dist/styles.css public/css/style.css
 ```
 
 ## Update the scaffold Clojurescript code to support Amplify
@@ -292,12 +316,12 @@ Note that the `amplify pull` will populate `src/amplify/ui-components` and the `
             ["/aws-exports" :default ^js aws-exports]
             ["aws-amplify" :refer [Amplify] :as amplify]
             ["@aws-amplify/ui-react" :refer [AmplifyProvider]]
-            ["ui-components/CardACollection" :default CardACollection]))
+            ["ui-components/RentalCollection" :default RentalCollection]))
 ```
 
-### Update the `app` method
+### Update the `app` function
 
-The following Clojurescript code is the equivilent of the original JS code:
+The following Clojurescript code is the equivalent of the original JS code:
 
 ```jsx
 function App() {
@@ -309,7 +333,54 @@ function App() {
 }
 ```
 
+Update `app` function
+
+This is the actual initial page code that is run by the render function. It is primarily [hiccup](https://github.com/reagent-project/reagent/blob/master/doc/UsingHiccupToDescribeHTML.md) syntax.
+
+- Displays a header
+- Wraps the `RentalCollection` we created in Figma / ui-components with the `AmplifyProvider`
+
+The `:>` is a function, [adapt-react-class](http://reagent-project.github.io/docs/master/reagent.core.html#var-adapt-react-class), that tells hiccup/reagent to interpret the next symbol as a React Component.
+More info at: [React Features in Reagent](https://cljdoc.org/d/reagent/reagent/1.1.0/doc/tutorials/react-features)
+
+```clojure
+(defn app []
+  [:h1 "Amplify Studio Tutorial"]
+  [:> AmplifyProvider
+   [:> RentalCollection]])
+```
+
+### Update the `main` function
+
+This function is the first code called in the program. It is where you would put any initialization code and then it calls the render function that kicks of the reagent/react event loop.
+
+- Add a bit of logging so we can see that we're hitting the code at runtime
+- Add the Amplify initialization code.
+
+```clojure
+(defn ^:export main []
+  (js/console.log "main top")
+  (-> Amplify (.configure aws-exports))
+  (render))
+```
+
+The Clojurescript:
+
+```clojure
+(-> Amplify (.configure aws-exports))
+```
+
+is the Javascript interop equivilent to:
+
+```javascript
+Amplify.configure(config);
+```
+
 ## Setup Webpack / Babel
+
+### Babel config file
+
+Babel does the work of converting JSX files to Javascript files suitable for consumption by webpack and shadow-cljs. It is called by webpack.
 
 Create the file `.babelrc` in the top level of the repo with the content:
 
@@ -318,6 +389,122 @@ Create the file `.babelrc` in the top level of the repo with the content:
   "presets": ["@babel/preset-env", "@babel/preset-react"]
 }
 ```
+
+This tells babel to run the presets:
+
+> [@babel/preset-env](https://babeljs.io/docs/en/babel-preset-env) is a smart preset that allows you to use the latest JavaScript without needing to micromanage which syntax transforms (and optionally, browser polyfills) are needed by your target environment(s). This both makes your life easier and JavaScript bundles smaller!
+
+and
+
+> [@babel/preset-react](https://babeljs.io/docs/en/babel-preset-react#docsNav) loads the following plugins:
+>
+> [@babel/plugin-syntax-jsx](https://babeljs.io/docs/en/babel-plugin-syntax-jsx) - enables parsing of JSX
+> [@babel/plugin-transform-react-jsx](https://babeljs.io/docs/en/babel-plugin-transform-react-jsx) - transform JSX to Javascript
+> [@babel/plugin-transform-react-display-name](https://babeljs.io/docs/en/babel-plugin-transform-react-display-name) - Set displayName in the Javascript
+>
+> And with the development option Classic runtime adds:
+>
+> [@babel/plugin-transform-react-jsx-self](https://babeljs.io/docs/en/babel-plugin-transform-react-jsx-self) - sets `self` in the transformed code
+> [@babel/plugin-transform-react-jsx-source](https://babeljs.io/docs/en/babel-plugin-transform-react-jsx-source) - injects the source information (file, lineno) into the the Javascript
+
+### Webpack configuration file
+
+[Webpack](https://webpack.js.org/concepts/):
+
+> At its core, webpack is a static module bundler for modern JavaScript applications. When webpack processes your application, it internally builds a dependency graph from one or more entry points and then combines every module your project needs into one or more bundles, which are static assets to serve your content from.
+
+We are using it to convert the JSX `ui-component` files from Figma/Amplify Studio into vanilla Javascript via babel. It is also being used to resolve the `src/amplify/models` and `src/amplify/ui-components` directories/files that are pulled from amplify into the repo as npm modules via the `resolve` block.
+
+#### Requires
+
+The following requires the webpack modules and plugins used
+
+```javascript
+const path = require("path");
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HtmlBeautifierPlugin = require("html-beautifier-webpack-plugin");
+```
+
+#### Basic Webpack config
+
+- Set mode to development
+- `entry` - The file generated by shadow-cljs describing all the require/imports seen in the code
+- `output` - Where webpack should put its final bundle of javascript that will be included by a `<script>` tag in the index.html
+- `devtool` - Tells webpack to generate source maps to be consumed by the browser devtools
+
+```javascript
+module.exports = {
+  mode: "development",
+  entry: "./target/index.js",
+  output: {
+    path: path.resolve(__dirname, "public"),
+    filename: "js/libs/bundle.js",
+    clean: false,
+  },
+  devtool: "source-map",
+```
+
+#### Rules
+
+This is the main directives that tell weback what to do.
+
+- `test: /\.m?js/,` - Regex that specifies what file types to apply to the first rule to (ones that end with `.mjs` or `.js`)
+  - `fullySpecified: false` - the import / require statements should not end with file suffixes
+  - `alias` - Maps the path to the javascript files to a module name. This allows the code to require the Amplify Studio `models` and `ui-components` as npm modules.
+- `test: /\.jsx$/` - Regex that specifies which file types to apply to the second rule (JSX files)
+  - `exclude` - Don't apply it to files installed by npm in `/node_modules/`
+  - `use` - Apply babel to the JSX files. The `.babelrc` file specified earlier tells babel to transform the JSX files to vanilla javascript
+
+```javascript
+    rules: [
+      {
+        // docs: https://webpack.js.org/configuration/module/#resolvefullyspecified
+        test: /\.m?js/,
+        resolve: {
+          fullySpecified: false,
+          alias: {
+            models: "../src/amplify/models/index.js",
+            "ui-components": "../src/amplify/ui-components",
+          },
+        },
+      },
+      {
+        test: /\.jsx$/,
+        exclude: /node_modules/,
+        use: ["babel-loader"],
+      },
+    ],
+```
+
+#### Plugins
+
+This is where plugins are loaded.
+
+- `process` - This was needed as webpack 5 no longer includes a polyfil for the `process` Node.js variable. There were some dependencies that required `process.env`
+- [HtmlWebpackPlugin](https://webpack.js.org/plugins/html-webpack-plugin/) - Enables creating `public/index.html` from a temlate so that webpack can inject the path to its bundle into the index.html. Also useful if you want to automate the updates of the index.html for other things.
+- [HtmlBeautifierPlugin](https://github.com/zamanruhy/html-beautifier-webpack-plugin#readme) Cleans up the index.html with proper newlines mainly
+
+```javascript
+  plugins: [
+    new webpack.ProvidePlugin({
+      process: "process/browser",
+    }),
+    new HtmlWebpackPlugin({
+      template: "./public/index.html.tmpl",
+      filename: "index.html",
+    }),
+    new HtmlBeautifierPlugin(),
+  ],
+```
+
+The Html plugins / index.html templating are not totally necessary. You could just add your own script tag to index.html instead such as:
+
+```html
+<script defer src="js/libs/bundle.js"></script>
+```
+
+#### The full `webpack.config.js`
 
 Create a file `webpack.config.js` also at the top level of the repo with the content:
 
@@ -372,30 +559,77 @@ module.exports = {
 };
 ```
 
-Add the following line to the `”scripts”` section of `package.json`
+#### Add a script to run webpack
+
+Add the following line to the `”scripts”` section of `package.json`. It will allow you to run a that will update the bundle automatically when you change any of the amplify files or when shadow-cljs updates the `target/index.js`
 
 ```json
     "pack": "webpack --watch"
 ```
 
-And the following to the `:devDependencies section (Use the latest versions available)
+## Update git
 
-```json
-    "webpack": "5.65.0",
-    "webpack-cli": "^4.9.1"
+### Update .gitignore
+
+add
+
+```git-config
+/target/
 ```
 
-Then do
+To .gitignore
+
+### Add all the new files
+
+git add -A
+git commit -m "Sync up all the final changes"
+
+## Running the development service locally
+
+Start the shadow-cljs watch process. (`shadow-cljs watch app`) using the npm command:
 
 ```bash
 npm start
 ```
 
-And in another terminal window, also at the top of the repo run:
+And in another terminal window, also at the top of the repo run the webpack watch process:
 
 ```
 npm run pack
 ```
+
+## Troubleshooting
+
+If when you start the shadow-cljs process (`npm start`) and you get something like:
+
+```bash
+...
+shadow-cljs - watching build :app
+[:app] Configuring build.
+[:app] Compiling ...
+[2022-01-02 21:55:15.214 - WARNING] :shadow.cljs.devtools.server.util/handle-ex - {:msg {:type :start-autobuild}}
+AssertionError Assert failed: (map? rc)
+...
+```
+
+The `js-provider :external` config in `shadow-cljs.edn` is masking the actual error. In order to see what the error is, comment out the `:js-options` block in `shadow-cljs.edn` like:
+
+```edn
+:builds
+ {:app
+  {:target     :browser
+   :output-dir "public/js"
+   :asset-path "/js"
+   ;; :js-options {:js-provider    :external
+   ;;              :external-index "target/index.js"}
+   :modules    {:main
+                {:init-fn amplifystudio-cljs-tutorial.app.core/main}}}
+
+```
+
+and then run `npm start` again and see what the error is. Correct the error and then uncomment the `:js-options` block.
+
+` `
 
 ---
 

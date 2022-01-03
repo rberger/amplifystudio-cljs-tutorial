@@ -1,19 +1,21 @@
 (ns amplifystudio-cljs-tutorial.app.core
   (:require [reagent.dom :as rdom]
-            ["/aws-exports" :default ^js aws-exports]
             ["aws-amplify" :refer [Amplify] :as amplify]
             ["@aws-amplify/ui-react" :refer [AmplifyProvider]]
-            ["ui-components/CardACollection" :default CardACollection]))
+            ["ui-components/RentalCollection" :default RentalCollection]
+            ["aws-exports" :default aws-exports]))
 
 (defn app []
   [:h1 "Amplify Studio Tutorial"]
   [:> AmplifyProvider
-   [:> CardACollection]])
+   [:> RentalCollection]])
 
 (defn render []
   (rdom/render [app] (.getElementById js/document "root")))
 
 (defn ^:export main []
+  (js/console.log "main top")
+  (-> Amplify (.configure aws-exports))
   (render))
 
 (defn ^:dev/after-load reload! []

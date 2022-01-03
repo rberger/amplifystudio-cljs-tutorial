@@ -19,7 +19,8 @@
     "test-once": "shadow-cljs compile test",
     "clean": "rimraf public/js",
     "nuke": "rimraf public/js .shadow-cljs node_modules yarn.lock package-lock.json out report.html",
-    "shadow-cljs-server": "shadow-cljs server"
+    "shadow-cljs-server": "shadow-cljs server",
+    "pack": "webpack --watch"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.7",
