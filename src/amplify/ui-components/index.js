@@ -6,6 +6,7 @@
 
 export { default as MarketingFooter } from "./MarketingFooter";
 export { default as CardD } from "./CardD";
+export { default as RentalCollection } from "./RentalCollection";
 export { default as CardB } from "./CardB";
 export { default as FormCheckout } from "./FormCheckout";
 export { default as CardA } from "./CardA";
