@@ -6,8 +6,8 @@
             ["aws-exports" :default aws-exports]))
 
 (defn app []
-  [:h1 "Amplify Studio Tutorial"]
   [:> AmplifyProvider
+   [:h1 "Amplify Studio Tutorial"]
    [:> RentalCollection]])
 
 (defn render []

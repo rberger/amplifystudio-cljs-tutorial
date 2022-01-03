@@ -335,7 +335,7 @@ Update `app` function
 
 This is the actual initial page code that is run by the render function. It is primarily [hiccup](https://github.com/reagent-project/reagent/blob/master/doc/UsingHiccupToDescribeHTML.md) syntax.
 
-- Displays a header
+- Displays an `h1` header
 - Wraps the `RentalCollection` we created in Figma / ui-components with the `AmplifyProvider`
 
 The `:>` is a function, [adapt-react-class](http://reagent-project.github.io/docs/master/reagent.core.html#var-adapt-react-class), that tells hiccup/reagent to interpret the next symbol as a React Component.
@@ -343,8 +343,8 @@ More info at: [React Features in Reagent](https://cljdoc.org/d/reagent/reagent/1
 
 ```clojure
 (defn app []
-  [:h1 "Amplify Studio Tutorial"]
   [:> AmplifyProvider
+  [:h1 "Amplify Studio Tutorial"]
    [:> RentalCollection]])
 ```
 
@@ -594,7 +594,12 @@ And in another terminal window, also at the top of the repo run the webpack watc
 
 ```
 npm run pack
+
 ```
+
+Should see something like the following. The images and values are dependent on how you set up the data when following along with the first part of the [Build a Vacation Rental Site with Amplify Studio](https://welearncode.com/studio-vacation-site/).
+
+![Initial Integration View](images/working-basic-integration.png)
 
 ## Troubleshooting
 
@@ -627,7 +632,9 @@ The `js-provider :external` config in `shadow-cljs.edn` is masking the actual er
 
 and then run `npm start` again and see what the error is. Correct the error and then uncomment the `:js-options` block.
 
-` `
+## Completing the Tutorial with Amplify UI Overrides
+
+**TBD**
 
 ---
 
