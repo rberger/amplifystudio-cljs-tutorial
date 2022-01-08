@@ -8,7 +8,10 @@
 (defn app []
   [:> AmplifyProvider
    [:h1 "Amplify Studio Tutorial"]
-   [:> RentalCollection]])
+   [:> RentalCollection {:type "list"
+                         :overrides {"Collection.CardA[0]"
+                                     {:overrides {"Flex.Image[0]"
+                                                  {:object-fit "cover"}}}}}]])
 
 (defn render []
   (rdom/render [app] (.getElementById js/document "root")))

@@ -7,6 +7,7 @@
 /.shadow-cljs
 report.html
 /target/
+
 # generated js
 /public/js
 /out

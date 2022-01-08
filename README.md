@@ -113,7 +113,7 @@ and you don’t need to do `amplify configure`.
 
 If you haven’t set up aws amplify on your local dev machine before, follow the instructions at [Configure the Amplify CLI](https://docs.amplify.aws/cli/start/install/#configure-the-amplify-cli)
 
-### Install the was-amplify libraries in your project
+### Install the aws-amplify libraries in your project
 
 Still at the top of the `amplifystudio-cljs-tutorial` repo, install the libraries
 
@@ -268,13 +268,13 @@ Add the following lines to shadow-cljs.edn between the `:asset-path` and `:modul
 
 Webpack will be used to update index.html with the proper script include that points to the webpack bundle.
 
-#### Move `public/index.html` to `public/index.html`
+#### Move `public/index.html` to `public/index.html.tmpl`
 
 ```bash
 mv public/index.html public/index.html.tmpl
 ```
 
-#### Edit `public/index.html`
+#### Edit `public/index.html.tmpl`
 
 - Add `defer` to the main script tag
 
@@ -289,6 +289,19 @@ To:
 ```html
 <script defer src="/js/main.js"></script>
 ```
+
+#### Add in a sytlesheet for the fonts
+
+- Add the following line after the other `link` tags in `<head>`
+
+```html
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css?family=Inter:slnt,wght@-10..0,100..900&display=swap"
+/>
+```
+
+`
 
 #### Copy the Amplify CSS to public
 
@@ -319,7 +332,24 @@ Note that the `amplify pull` will populate `src/amplify/ui-components` and the `
 
 ### Update the `app` function
 
-The following Clojurescript code is the equivalent of the original JS code:
+This is the actual initial page code that is run by the render function. It is primarily [hiccup](https://github.com/reagent-project/reagent/blob/master/doc/UsingHiccupToDescribeHTML.md) syntax.
+
+- Displays an `h1` header
+- Wraps the `RentalCollection` we created in Figma / ui-components with the `AmplifyProvider`
+
+The `:>` is a function, [adapt-react-class](http://reagent-project.github.io/docs/master/reagent.core.html#var-adapt-react-class), that tells hiccup/reagent to interpret the next symbol as a React Component.
+More info at: [React Features in Reagent](https://cljdoc.org/d/reagent/reagent/1.1.0/doc/tutorials/react-features)
+
+The `app` function:
+
+```clojure
+(defn app []
+  [:> AmplifyProvider
+  [:h1 "Amplify Studio Tutorial"]
+   [:> RentalCollection]])
+```
+
+For comparison here is the equivalent Javascript:
 
 ```jsx
 function App() {
@@ -329,23 +359,6 @@ function App() {
     </AmplifyProvider>
   );
 }
-```
-
-Update `app` function
-
-This is the actual initial page code that is run by the render function. It is primarily [hiccup](https://github.com/reagent-project/reagent/blob/master/doc/UsingHiccupToDescribeHTML.md) syntax.
-
-- Displays an `h1` header
-- Wraps the `RentalCollection` we created in Figma / ui-components with the `AmplifyProvider`
-
-The `:>` is a function, [adapt-react-class](http://reagent-project.github.io/docs/master/reagent.core.html#var-adapt-react-class), that tells hiccup/reagent to interpret the next symbol as a React Component.
-More info at: [React Features in Reagent](https://cljdoc.org/d/reagent/reagent/1.1.0/doc/tutorials/react-features)
-
-```clojure
-(defn app []
-  [:> AmplifyProvider
-  [:h1 "Amplify Studio Tutorial"]
-   [:> RentalCollection]])
 ```
 
 ### Update the `main` function
@@ -412,6 +425,8 @@ and
 > At its core, webpack is a static module bundler for modern JavaScript applications. When webpack processes your application, it internally builds a dependency graph from one or more entry points and then combines every module your project needs into one or more bundles, which are static assets to serve your content from.
 
 We are using it to convert the JSX `ui-component` files from Figma/Amplify Studio into vanilla Javascript via babel. It is also being used to resolve the `src/amplify/models` and `src/amplify/ui-components` directories/files that are pulled from amplify into the repo as npm modules via the `resolve` block.
+
+There will be a webpack configuration file, `webpack.config.js` in the top level of the repo. The following will describe the elements we're going to use in that file.
 
 #### Requires
 
@@ -603,7 +618,7 @@ Should see something like the following. The images and values are dependent on 
 
 ## Troubleshooting
 
-If when you start the shadow-cljs process (`npm start`) and you get something like:
+If when you start the shadow-cljs process, `npm start`, and you get something like:
 
 ```bash
 ...
@@ -630,13 +645,81 @@ The `js-provider :external` config in `shadow-cljs.edn` is masking the actual er
 
 ```
 
-and then run `npm start` again and see what the error is. Correct the error and then uncomment the `:js-options` block.
+and then run `npm start` again and see what the error is. Correct the error and then remember to uncomment the `:js-options` block.
 
 ## Completing the Tutorial with Amplify UI Overrides
 
-**TBD**
+We pick back up the original tutorial at the `Use a Prop` section to show how the UI Components can be customized just with Component Props and runtime Overrides.
 
----
+Overrides are a powerful feature that are builtin to the Amplify UI Components and allow you to inject attributes into the children of components at runtime. It makes the Amplify UI Components very flexible without having to modify the actual code of the components. This allows you to update the Figma design aspects and still update your local copy of the ui-components with an `amplify pull` since you don't make local changes to that code.
+
+### Use a Prop
+
+> You can customize these React components in your own code. First, you can use props in order to modify your components. If you wanted to make your grid of rentals into a list, for example, you could pass the prop type="list" to your RentalCollection.
+
+In Javascript you would say:
+
+```javascript
+<RentalCollection type="list" />
+```
+
+and in Clojurescript:
+
+```clojure
+[:> RentalCollection {:type "list"}]
+```
+
+#### And that will make the view go from a grid to a list:
+
+![Colllection as a list](images/collection-as-list.png)
+
+The props are listed for each component type at [Amplify UI Connected Components](https://ui.docs.amplify.aws/components)
+
+### Use an Override
+
+Overrides allow you to inject props into the children of a component.
+
+In our example RentalCollection, the images in the child cards are kind of squashed. To fix that we want to set the `objectFit` prop of the image element of the card to `cover`.
+
+In Javascript you would use:
+
+```javascript
+<RentalCollection
+  type="list"
+  overrides={{
+    "Collection.CardA[0]": {
+      overrides: {
+        "Flex.Image[0]": { objectFit: "cover" },
+      },
+    },
+  }}
+/>
+```
+
+In Clojurescript we use:
+
+```clojure
+[:> RentalCollection {:type "list"
+                      :overrides {"Collection.CardA[0]"
+                                  {:overrides {"Flex.Image[0]"
+                                               {:object-fit "cover"}}}}}]])
+```
+
+#### Now the images are no longer squished:
+
+![objectFit cover prop applied to children images](images/props-applied-to-children.png)
+
+## Themes and Conclusion
+
+That completes showing the differences of using Clojurescript instead of Javascript with Amplify Studio and Amplify UI Connected Components.
+
+You can refer back to the original AWS Tutorial [Build a Vacation Rental Site with Amplify Studio](https://welearncode.com/studio-vacation-site/) for the remaining content on how to use the [AWS Amplify Theme Editor](https://www.figma.com/community/plugin/1040722185526429545/AWS-Amplify-Theme-Editor) in Figma to add a theme to the UI Components. This should work without having to change any of your Clojurescript code as you modify the Ui component code that you load via `amplify pull` via Figma.
+
+It is also possible to [apply themes directly in your code](https://ui.docs.amplify.aws/theming). Doing that with Clojurescript will be left to a possible future article.
+
+The full project / code for this repo is at https://github.com/rberger/amplifystudio-cljs-tutorial.
+
+## Feel free to post issues or questions there.
 
 ---
 
