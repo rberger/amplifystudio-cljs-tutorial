@@ -239,6 +239,7 @@ The first time you run this, it will take a while to download all the Clojurescr
 
 And see that the app is running at `http://localhost:3000`
 You will just see `Create Reagent App` on the page as a header.
+
 ![Initial Create Reagent App success page](images/initial-reagent-app-page.png)
 
 ## Update to support mixing webpack with shadow-cljs
