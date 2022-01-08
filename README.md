@@ -302,8 +302,6 @@ To:
 />
 ```
 
-`
-
 #### Copy the Amplify CSS to public
 
 Note that the source is `styles.css` (plural) and the destination is `style.css` (singular)
@@ -581,9 +579,9 @@ Add the following line to the `”scripts”` section of `package.json`. It will
     "pack": "webpack --watch"
 ```
 
-## Update git
+### Update git
 
-### Update .gitignore
+#### Update .gitignore
 
 add
 
@@ -593,7 +591,7 @@ add
 
 To .gitignore
 
-### Add all the new files
+#### Add all the new files
 
 git add -A
 git commit -m "Sync up all the final changes"
